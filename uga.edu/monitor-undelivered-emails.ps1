@@ -31,15 +31,15 @@ if ( !(Test-Path -path "$scriptFolder\history.log") )
     New-Item -Path "$scriptFolder" -Name "history.log" -ItemType File
 }
 
-$lastcount = Get-Content "$scriptFolder\last-count"
+$lastCount = Get-Content "$scriptFolder\last-count"
 
-##check newest count of emails vs the last count. If the same, print to log. If different, print to log, send notification email, and update lastcount.
-if ($lastcount -ne $newestCount)
+##check newest count of emails vs the last count. If the same, print to log. If different, print to log, send notification email, and update lastCount.
+if ($lastCount -ne $newestCount)
 {
 	Add-content -path "$scriptFolder\history.log" -value ("$date -- There was a change in number of emails.")
 
-	$emailSubject = "Compass undelivered emails increased by $($newestCount-$lastcount)"
-	$emailMessage = "<p>The number of undelivered emails on compass.uga.edu increased by $($newestCount-$lastcount).<p>"
+	$emailSubject = "Compass undelivered emails increased by $($newestCount-$lastCount)"
+	$emailMessage = "<p>The number of undelivered emails on compass.uga.edu increased by $($newestCount-$lastCount).<p>"
 	$cred = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList $emailUser, (Get-Content -path $emailPassword | ConvertTo-SecureString -asplaintext -force)
 
 	$MailServerParams = @{
@@ -57,7 +57,7 @@ if ($lastcount -ne $newestCount)
 
 	$newestCount | Out-File -filepath "$scriptFolder\last-count"
 }
-elseif ($lastcount -eq $newestCount)
+elseif ($lastCount -eq $newestCount)
 {
 	Add-content -path "$scriptFolder\history.log" -value ("$date -- No email changes.")
 }
