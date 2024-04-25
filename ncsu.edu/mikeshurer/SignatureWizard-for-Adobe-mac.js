@@ -14,7 +14,7 @@ var sevisSign = app.trustedFunction( function (travelSig) {
     var fileFound = false;
     var signed = false;
     try{
-        var stmFileData = util.readFileIntoStream(app.getPath("user")+"/Security/sevSignSettings.pdf");
+        var stmFileData = util.readFileIntoStream(app.getPath("user")+"Security/sevSignSettings.pdf");
         fileFound = true;
     } catch(e) {
         app.alert("Cannot find settings file. Please use settings update tool and try again.");
@@ -65,10 +65,10 @@ var sevisSign = app.trustedFunction( function (travelSig) {
             if(password==""){
                 password = app.response({cQuestion: "Enter Signature Password", cTitle: "Password not found", bPassword: true, cLabel: "Password"})
             }
-            var pfx = dsoname.replace(/\s/g, '')+".pfx";
-            var file = app.getPath("user") + "/Security/" + pfx;
+            var pfx = dsoname.replace(/\s/g, '')+".p12";
+            var file = app.getPath("user") + "Security/" + pfx;
             if(fileOverride!="default.pfx"){
-                file = app.getPath("user") + "/Security/" + fileOverride;
+                file = app.getPath("user") + "Security/" + fileOverride;
             }
             try {
                 console.println("attempting to login using file: "+file);
@@ -484,39 +484,44 @@ var oDlg = {
                             { item_id: "fd01", alignment: "align_distribute", type: "edit_text", char_width: 30 },
 
                             { name: "title:", type: "static_text", alignment: "align_distribute"},
-                            { item_id: "fd02", type: "edit_text", char_width: 30, alignment: "align_distribute" },
-
-                            { name: "location:", type: "static_text", alignment: "align_right"},
-                            { item_id: "fd03", type: "edit_text", char_width: 30, alignment: "align_right" }
+                            { item_id: "fd02", type: "edit_text", char_width: 30, alignment: "align_distribute" }
                         ]
                     },
                     {type: "view", align_children: "align_row", elements: [
                             { name: "email:", type: "static_text", alignment: "align_left"},
                             { item_id: "fd04", type: "edit_text", char_width: 30, alignment: "align_left" },
 
-                            { name: "password:", type: "static_text", alignment: "align_center"},
-                            { item_id: "fd05", type: "edit_text", char_width: 30, alignment: "align_center" , password: true},
+                            { name: "location:", type: "static_text", alignment: "align_right"},
+                            { item_id: "fd03", type: "edit_text", char_width: 30, alignment: "align_right" }
+                        ]
+                    },
+                    {type: "view", align_children: "align_row", elements: [
+                            { name: "password:", type: "static_text", alignment: "align_left"},
+                            { item_id: "fd05", type: "edit_text", char_width: 30, alignment: "align_left" , password: true},
                         ]
                     }
                 ]
             },
             { type: "cluster", name: "Advanced settings", align_children: "align_left", elements: [
-                  {type: "view", align_children: "align_row", elements: [
                     {type: "view", align_children: "align_row", elements: [
-                        { name: "Save Behavior: 1 = Save, 2 = Save As", alignment: "align_distribute", type: "static_text", }
-                        ]
-                    },
+                            {type: "view", align_children: "align_row", elements: [
+                                { name: "Save Behavior: 1 = Save, 2 = Save As", alignment: "align_distribute", type: "static_text", }
+                                ]
+                            },
 
                             { name: "Save Behavior:", type: "static_text", },
-                            { item_id: "fd06", type: "edit_text", char_width: 5 },
-
-                            { name: "F1 Appearance Settings:", type: "static_text", },
-                            { item_id: "fd07", type: "edit_text", char_width: 30 },
-
-                            { name: "J1 Appearance Settings:", type: "static_text", },
-                            { item_id: "fd08", type: "edit_text", char_width: 30 }
+                            { item_id: "fd06", type: "edit_text", char_width: 5 }
                         ]
                     },
+                    {type: "view", align_children: "align_row", elements: [
+
+                        { name: "F1 Appearance Settings:", type: "static_text", },
+                        { item_id: "fd07", type: "edit_text", char_width: 30 },
+
+                        { name: "J1 Appearance Settings:", type: "static_text", },
+                        { item_id: "fd08", type: "edit_text", char_width: 30 }
+                    ]
+                },
                     {type: "view", align_children: "align_row", elements: [
 
                             { name: "F1 Sign For Travel:", type: "static_text", },
