@@ -1,8 +1,6 @@
 /**
  * SEVIS Sign.js
- * Copyright (c) 2023 Michael Shurer and NC State University
- * 
- * This is free for personal use only. 
+ * Copyright (c) 2024 Michael Shurer and NC State University
  * 
  * This code in whole or in part cannot be copied, distributed, or integrated into other software. 
  * 
@@ -14,260 +12,275 @@
 var sevisSign = app.trustedFunction( function (travelSig) { 
     app.beginPriv();
     var fileFound = false;
+    var signed = false;
     try{
         var stmFileData = util.readFileIntoStream(app.getPath("user")+"/Security/sevSignSettings.pdf");
         fileFound = true;
     } catch(e) {
         app.alert("Cannot find settings file. Please use settings update tool and try again.");
     }
-    if(fileFound==true){
-        var dataStr = util.stringFromStream(stmFileData, "utf-8");
-        var data = dataStr.match(/(V\(.+?\))/g);
-        var dsoname = data[0].substring(2,data[0].length-1);
-        var title = data[1].substring(2,data[1].length-1);
-        var location = data[2].substring(2,data[2].length-1);
-        var email = data[3].substring(2,data[3].length-1);
-        var password = data[4].substring(3,data[4].length-1);
-        var saveBehavior = data[5].substring(2,data[5].length-1);
-        var F1AppearanceSettings = data[6].substring(2,data[6].length-1);
-        var J1AppearanceSettings = data[7].substring(2,data[7].length-1);
-        var F1SignForTravel = data[8].substring(2,data[8].length-1);
-        var J1SignForTravel = data[9].substring(2,data[9].length-1);
-        var autoSign = data[10].substring(2,data[10].length-1);
-        //var file = data[11].substring(2,data[11].length-1);
-        var F1PrimarySignatureWidth = data[11].substring(2,data[11].length-1)*1;
-        var F1PrimarySignatureHeight = data[12].substring(2,data[12].length-1)*1;
-        var F1TravelSignatureWidth = data[13].substring(2,data[13].length-1)*1;
-        var F1TravelSignatureHeight = data[14].substring(2,data[14].length-1)*1;
-        var J1PrimarySignatureWidth = data[15].substring(2,data[15].length-1)*1;
-        var J1PrimarySignatureHeight = data[16].substring(2,data[16].length-1)*1;
-        var J1TravelSignatureWidth = data[17].substring(2,data[17].length-1)*1;
-        var J1TravelSignatureHeight = data[18].substring(2,data[18].length-1)*1;
-    }
-
-    var pfx = dsoname.replace(/\s/g, '')+".pfx";
-
-    var file = app.getPath("user") + "/Security/" + pfx;
-
-    if (travelSig==false) {
-        var F1SignForTravel ="false";
-    }
-
-    var initialCheck = searchWord(0,"INITIAL");
-    if (initialCheck==true) {
-        var F1SignForTravel ="false";
-    }
-    console.println(F1SignForTravel);
-    var date = new Date();
-    var today = (date.getMonth() + 1) + '/' + date.getDate() + '/' + date.getFullYear();
-    var pages = this.numPages
-    var sigType = "signature";
-    var textType = "text";
-
-    var isEven = pages%2==0;
-    console.println(isEven);
-    if(isEven==false) {
-        var people = (pages + 1) / 4;
-        var dsoText = [];
-        var titleText = [];
-        var placeText = [];
-        var dateText = [];
-        var sf2 = [];
-        var sf = [];
-        console.println(people);  
-        for( i = 0; i < people ; i++) {
-            if (i == 0) {
-                var j = 0;
-            } else {
-                var j = 1;
+    if(fileFound){
+        try{
+            console.println("attempting signature");
+            var dataStr = util.stringFromStream(stmFileData, "utf-8");
+            var data = dataStr.match(/(V\(.+?\))/g);
+            if(data.length < 20){
+                console.println("tool not yet upgraded");
+                stmFileData = null;
+                app.alert("To complete the upgrade, you must run the settings tool again");
+                return;
             }
-            var page = 0 + (j * i) + (i * 3);
-            var travelPage = 1 + (j * i) + (i * 3);
-            var sigName = "sig" + i;
-            var travelSigName = "travelSig" + i;
-            var dsoFieldName = "dso" + i;
-            console.println(dsoFieldName);
-            var titleName = "title" + i;
-            var dateName = "date" + i;
-            var placeName = "location" + i;
-            var sigRect = [50,(getQuad(page,"SIGNATURE",1)*1)+F1PrimarySignatureHeight,50+F1PrimarySignatureWidth,getQuad(page,"SIGNATURE",1)-5];
-            sf[i] = this.addField(sigName, sigType, page, sigRect);
-            if(F1SignForTravel=="true"){
-                var travelSigRect = [272,getQuad(travelPage,"SIGNATURE",1)-5,272+F1TravelSignatureWidth,getQuad(travelPage,"SIGNATURE",1)-F1TravelSignatureHeight];
-                var DSORect = [35,getQuad(travelPage,"SIGNATURE",1)-5,150,getQuad(travelPage,"SIGNATURE",1)-35];
-                var titleRect = [155,getQuad(travelPage,"SIGNATURE",1)-5,250,getQuad(travelPage,"SIGNATURE",1)-35];
-                var dateRect = [390,getQuad(travelPage,"SIGNATURE",1)-5,470,getQuad(travelPage,"SIGNATURE",1)-35];
-                var placeRect = [480,getQuad(travelPage,"SIGNATURE",1)-5,575,getQuad(travelPage,"SIGNATURE",1)-35];
-                dsoText[i] = this.addField(dsoFieldName, textType, travelPage, DSORect);
-                dsoText[i].value = dsoname;
-                dsoText[i].textColor = color.blue;
-                titleText[i] = this.addField(titleName, textType, travelPage, titleRect);
-                titleText[i].value = title;
-                titleText[i].textColor = color.blue;
-                dateText[i] = this.addField(dateName, textType, travelPage, dateRect);
-                dateText[i].value = today;
-                dateText[i].textColor = color.blue;
-                placeText[i] = this.addField(placeName, textType, travelPage, placeRect);
-                placeText[i].value = location;
-                placeText[i].textColor = color.blue;
-                sf2[i] = this.addField(travelSigName, sigType, travelPage, travelSigRect);
+            var dsoname = data[0].substring(2,data[0].length-1);
+            var title = data[1].substring(2,data[1].length-1);
+            var location = data[2].substring(2,data[2].length-1);
+            var email = data[3].substring(2,data[3].length-1);
+            var password = data[4].substring(3,data[4].length-1);
+            var saveBehavior = data[5].substring(2,data[5].length-1);
+            var F1AppearanceSettings = data[6].substring(2,data[6].length-1);
+            var J1AppearanceSettings = data[7].substring(2,data[7].length-1);
+            var F1SignForTravel = data[8].substring(2,data[8].length-1);
+            var J1SignForTravel = data[9].substring(2,data[9].length-1);
+            var autoSign = data[10].substring(2,data[10].length-1);
+            var F1PrimarySignatureWidth = data[11].substring(2,data[11].length-1)*1;
+            var F1PrimarySignatureHeight = data[12].substring(2,data[12].length-1)*1;
+            var F1TravelSignatureWidth = data[13].substring(2,data[13].length-1)*1;
+            var F1TravelSignatureHeight = data[14].substring(2,data[14].length-1)*1;
+            var J1PrimarySignatureWidth = data[15].substring(2,data[15].length-1)*1;
+            var J1PrimarySignatureHeight = data[16].substring(2,data[16].length-1)*1;
+            var J1TravelSignatureWidth = data[17].substring(2,data[17].length-1)*1;
+            var J1TravelSignatureHeight = data[18].substring(2,data[18].length-1)*1;
+            var date = new Date();
+            var today = (date.getMonth() + 1) + '/' + date.getDate() + '/' + date.getFullYear();
+            var dsoPadded = padText(dsoname,24);
+            var locationPadded = padText(location,20);
+            var titlePadded = padText(title,20);
+            var todayPadded = padText(today,18);
+            var pages = this.numPages
+            var isEven = pages%2==0;
+            try {
+            var fileOverride = data[19].substring(2,data[19].length-1);
+            } catch(e) {
+                app.alert("Signature Wizard update incomplete. Please record your password and other settings and delete the configuration file found here: \n\n"+app.getPath("user")+"/Security/sevSignSettings.pdf\n\nOnce you have deleted the configurations file you must click the settings button again (bolt with gear) to reenter your signature settings.")
             }
-
-        }
-
-        var rec1 = [];
-        var copyRect = [];
-        var rec2 = [];
-        var copyRect2 = [];
-
-        for( i = 0; i < people ; i++) {
-            if (i == 0) {
-                var j = 0;
-            } else {
-                var j = 1;
+            if(password==""){
+                password = app.response({cQuestion: "Enter Signature Password", cTitle: "Password not found", bPassword: true, cLabel: "Password"})
             }
-            var page = 0 + (j * i) + (i * 3);
-            rec1[i] = this.getField("sig" + i);
-            copyRect[i] = rec1[i].rect;
-            if(F1SignForTravel=="true"){
-                var travelPage = 1 + (j * i) + (i * 3);
-                rec2[i] = this.getField("travelSig" + i);
-                copyRect2[i] = rec2[i].rect;
+            var pfx = dsoname.replace(/\s/g, '')+".pfx";
+            var file = app.getPath("user") + "/Security/" + pfx;
+            if(fileOverride!="default.pfx"){
+                file = app.getPath("user") + "/Security/" + fileOverride;
             }
-        }
-
-        this.flattenPages();
-
-        var sf3 = [];
-        var sf4 = [];
-        var f = [];
-        var f2 = [];
-
-        for( i = 0; i < people ; i++) {
-            if (i == 0) {
-                var j = 0;
-            } else {
-                var j = 1;
+            try {
+                console.println("attempting to login using file: "+file);
+                var dititalSign = security.getHandler("Adobe.PPKLite");
+                    dititalSign.login(password, file);
+            } catch(e) {
+                app.alert("Cannot find certificate file or the password is incorrect. Please confirm you are using the correct password in the settings configurations and confirm that the following file exists: \n\n"+file+"\n\nIf your digital certificate is named something other than "+pfx+" you can override the filename in the settings configurations page.");
+                return
+            } 
+            console.println("login successful");  
+            if (travelSig==false) {
+                var F1SignForTravel ="false";
             }
-            var dititalSign = security.getHandler("Adobe.PPKLite");
-            dititalSign.login(password, file);
-            var page = 0 + (j * i) + (i * 3);
-            sf3[i] = this.addField("signame3" + i, sigType, page, copyRect[i]);
-            f[i] = this.getField("signame3" + i);
-            f[i].textColor = color.blue;
-            f[i].signatureSetSeedValue({appearanceFilter: F1AppearanceSettings, flags: 256});
-            if(F1SignForTravel=="true"){
-                var travelPage = 1 + (j * i) + (i * 3);
-                sf4[i] = this.addField("signame4" + i, sigType, travelPage, copyRect2[i]);
-                f2[i] = this.getField("signame4" + i);
-                f2[i].textColor = color.blue;
-                f2[i].signatureSetSeedValue({appearanceFilter: F1AppearanceSettings, flags: 256});
-            }
-        }
-
-        if (autoSign=="true") {
-            for( i = 1; i < people ; i++) {
-                var page = 0 + (1 * i) + (i * 3);
-                f[i] = this.getField("signame3" + i);
-                f[i].signatureSign( dititalSign, {password: password, location: location, reason: "I am approving this document", contactInfo: email});
-                f[i].signatureValidate();
-                if(F1SignForTravel=="true"){
-                    var travelPage = 1 + (1 * i) + (i * 3);
-                    f2[i] = this.getField("signame4" + i);
-                    f2[i].signatureSign( dititalSign, {password: password, location: location, reason: "I am approving this document", contactInfo: email});
-                    f2[i].signatureValidate();
+            var sigType = "signature";
+            var textType = "text";
+            var page = 0;
+            var sigCount = 0;
+            console.println("checking doctype");
+            if(searchWord(page,"SCHOOL",25)) {
+                console.println("F-1 document found");
+                var initialCheck = searchWord(0,"INITIAL",this.getPageNumWords(0));
+                if (initialCheck==true) {
+                    var F1SignForTravel ="false";
                 }
-            }
-
-            sigPrime = this.getField("signame30");
-            sigPrime.signatureSign( dititalSign, {password: password, location: location, reason: "I am approving this document", contactInfo: email});
-            sigPrime.signatureValidate();
-            if(F1SignForTravel=="true"){
-                travelPrime = this.getField("signame40");
-                travelPrime.signatureSign( dititalSign, {password: password, location: location, reason: "I am approving this document", contactInfo: email});
-                travelPrime.signatureValidate();
-            }
-        }
-    } else {
-        if (travelSig==false) {
-            var J1SignForTravel ="false";
-        }
-        var initialCheck = searchWord(0,"Begin");
-        if(initialCheck==true){
-            var J1SignForTravel = "false";
-        }
-        var people = (pages) / 2;
-        if(J1SignForTravel=="true"){
-            var dateText = [];
-            for( i = 0; i < people ; i++) {       
-                var page = (2 * i);
-                var dateName = "date" + i;
-                var dateRect = [460,(getQuad(page,"Signature",3)*1)+25,570,(getQuad(page,"Signature",3)*1)+50];
-                dateText[i] = this.addField(dateName, textType, page, dateRect);
-                dateText[i].value = today;
-            }
-        }
-
-
-        this.flattenPages();
-
-        var sf3 = [];
-        var sf4 = [];
-        var f = [];
-        var f2 = [];
-
-        for( i = 0; i < people ; i++) {
-            var dititalSign = security.getHandler("Adobe.PPKLite");
-            dititalSign.login(password, file);
-            var page = (2 * i);
-            var sigRect = [260,(getQuad(page,"Signature",1)*1)+J1PrimarySignatureHeight,260+J1PrimarySignatureWidth,getQuad(page,"Signature",1)];
-            sf3[i] = this.addField("signame3" + i, sigType, page, sigRect);
-            f[i] = this.getField("signame3" + i);
-            f[i].signatureSetSeedValue({appearanceFilter: J1AppearanceSettings, flags: 256});
-            if(J1SignForTravel=="true"){
-                var travelSigRect = [425,getQuad(page,"Signature",3),425+J1TravelSignatureWidth,(getQuad(page,"Signature",3)*1)+J1TravelSignatureHeight];
-                sf4[i] = this.addField("signame4" + i, sigType, page, travelSigRect);
-                f2[i] = this.getField("signame4" + i);
-                f2[i].signatureSetSeedValue({appearanceFilter: J1AppearanceSettings, flags: 256});
-            }
-        }
-        if (autoSign=="true"){
-            for( i = 0; i < people ; i++) {
-                var page = (2 * i);
-                f[i] = this.getField("signame3" + i);
-                f[i].signatureSign( dititalSign, {password: password, location: location, reason: "I am approving this document", contactInfo: email});
-                f[i].signatureValidate();
-                if(J1SignForTravel=="true"){
-                    f2[i] = this.getField("signame4" + i);
-                    f2[i].signatureSign( dititalSign, {password: password, location: location, reason: "I am approving this document", contactInfo: email});
-                    f2[i].signatureValidate();
+                var dsoText = [];
+                var titleText = [];
+                var placeText = [];
+                var dateText = [];               
+                for( i = 0; i < pages ; i++) {
+                    if(searchWord(i,"TRAVEL",25)) {
+                        page = i;        
+                        var dsoFieldName = "dso" + page;
+                        var titleName = "title" + page;
+                        var dateName = "date" + page;
+                        var placeName = "location" + page;
+                        var sigTextStart = getQuad(page,"SIGNATURE",1)*1;
+                        if(F1SignForTravel=="true"){
+                            var DSORect = [35,sigTextStart-5,150,sigTextStart-35];
+                            var titleRect = [155,sigTextStart-5,250,sigTextStart-35];
+                            var dateRect = [390,sigTextStart-5,470,sigTextStart-35];
+                            var placeRect = [480,sigTextStart-5,575,sigTextStart-35];
+                            dsoText[i] = this.addField(dsoFieldName, textType, page, DSORect);
+                            dsoText[i].value = dsoPadded;
+                            dsoText[i].textColor = color.blue;
+                            titleText[i] = this.addField(titleName, textType, page, titleRect);
+                            titleText[i].value = titlePadded;
+                            titleText[i].textColor = color.blue;
+                            dateText[i] = this.addField(dateName, textType, page, dateRect);
+                            dateText[i].value = todayPadded;
+                            dateText[i].textColor = color.blue;
+                            placeText[i] = this.addField(placeName, textType, page, placeRect);
+                            placeText[i].value = locationPadded;
+                            placeText[i].textColor = color.blue;              
+                        }        
+                    }
                 }
+                this.flattenPages();
+                var f = [];
+                var sigName = "";
+                var sigRect = [0,0,0,0];
+                for( i = 0; i < pages ; i++) {
+                    page = i
+                    if(searchWord(page,"SCHOOL",10)) {
+                        sigName = "sig" + sigCount;
+                        sigRectStart = getQuad(page,"SIGNATURE",1)*1;
+                        sigRect = [50,sigRectStart+F1PrimarySignatureHeight,50+F1PrimarySignatureWidth,sigRectStart-5];
+                        f[i] = this.addField(sigName, sigType, page, sigRect);
+                        f[i].textColor = color.blue;
+                        f[i].signatureSetSeedValue({appearanceFilter: F1AppearanceSettings, flags: 256});
+                        sigCount++;
+                    } else if(searchWord(page,"TRAVEL",50)) {
+                        if(F1SignForTravel=="true"){
+                            sigName = "sig" + sigCount;
+                            sigRectStart = getQuad(page,"SIGNATURE",1)*1;
+                            sigRect = [272,sigRectStart-5,272+F1TravelSignatureWidth,sigRectStart-F1TravelSignatureHeight];
+                            f[i] = this.addField(sigName, sigType, page, sigRect);
+                            f[i].textColor = color.blue;
+                            f[i].signatureSetSeedValue({appearanceFilter: F1AppearanceSettings, flags: 256});
+                            sigCount++;
+                        }
+                    }
+                }
+        
+                if (autoSign=="true") {
+                    console.println("autoSign: " + autoSign)
+                    for( i = 0; i < sigCount ; i++) {         
+                        f[i] = this.getField("sig" + i);
+                        f[i].signatureSign( dititalSign, {password: password, location: location, reason: "I am approving this document", contactInfo: email});
+                    }
+                }
+                dititalSign.logout();
+            } else if(isEven) {
+                console.println("J-1 document found");
+                if (!travelSig) {
+                    J1SignForTravel = false;
+                }
+                console.println("checking initial doctype");
+                var initialCheck = searchWord(0,"Begin",this.getPageNumWords(0));
+                if(initialCheck){
+                    console.println("initial doctype found");
+                    J1SignForTravel = false;
+                }
+                console.println("checking j-1 travel signature eligibility");
+                if(J1SignForTravel){
+                    console.println("J-1 travel signature eligibility found");
+                    var dateText = [];
+                    for( i = 0; i < pages ; i++) { 
+                        if(i%2==0) {     
+                            var dateName = "date" + i;
+                            var dateRect = [444,190,540,215];
+                            console.println("[460,163.5,570,213.5]")
+                            console.println("date "+i+" [460,"+(getQuad(i,"Signature",3)*1)+25+",570,"+(getQuad(i,"Signature",3)*1)+50+"]");
+                            dateText[i] = this.addField(dateName, textType, i, dateRect);
+                            dateText[i].value = today;
+                            console.println("dateblock "+i+" added")
+                        }
+                    }
+                }
+        
+                this.flattenPages();
+                
+                var f = [];
+                var f2 = [];
+                var sf = [];
+                var sigCount = 0;
+                var sigName = "";
+                var sigRect = [0,0,0,0];
+                for( i = 0; i < pages; i++) {
+                    if(i%2==0) {   
+                        depOffset = 0;
+                        if(i==0){
+                            depOffset = 2.23;
+                        }
+                        sigName = "sig" + sigCount;
+                        console.println("adding signature block: "+sigName+ " page: " + i + "total pages: " + pages)
+                        var sigRect = [260,325,260+(1*J1PrimarySignatureWidth),325+(1*J1PrimarySignatureHeight)];
+                        f[i] = this.addField(sigName, sigType, i, sigRect);
+                        f[i].signatureSetSeedValue({appearanceFilter: J1AppearanceSettings, flags: 256});
+                        sigCount++;
+                        if(J1SignForTravel){
+                            var travelSigName = "sig" + sigCount;
+                            var travelSigRect = [425,163.6,425+(1*J1TravelSignatureWidth),163.6+J1TravelSignatureHeight];
+                            f2[i] = this.addField(travelSigName, sigType, i, travelSigRect);
+                            f2[i].textColor = color.blue;
+                            f2[i].signatureSetSeedValue({appearanceFilter: J1AppearanceSettings, flags: 256});
+                            sigCount++;
+                        }
+                    }
+                }
+                if (autoSign=="true") {    
+                    console.println("autoSign: " + autoSign)
+                    for( i = 0; i < sigCount ; i++) {           
+                        sf[i] = this.getField("sig" + i);
+                        sf[i].signatureSign( dititalSign, {password: password, location: location, reason: "I am approving this document", contactInfo: email});
+                        var saveBehavior = data[5].substring(2,data[5].length-1);
+                        var autoSign = data[10].substring(2,data[10].length-1);
+                        try {
+                            if(autoSign=="true") {
+                                console.println("saving: " + i)
+                                if(saveBehavior=="1"){
+                                    app.execMenuItem("Save");
+                                } else if(saveBehavior=="2"){
+                                    app.execMenuItem ("SaveAs"); 
+                                } else {
+                                    return false;
+                                }
+                            }
+                        } catch (e) {
+                            app.alert("Save failed. Please try again.");
+                        }
+                    }
+                } 
+                
+            }
+            signed = true;
+
+        } catch(e) {
+            console.println(e);
+            app.alert("Signature failed. Please try again.");
+        } 
+
+        if(signed){
+            var saveBehavior = data[5].substring(2,data[5].length-1);
+            var autoSign = data[10].substring(2,data[10].length-1);
+            try {
+                if(autoSign=="true") {
+                    if(saveBehavior=="1"){
+                        app.execMenuItem("Save");
+                    } else if(saveBehavior=="2"){
+                        app.execMenuItem ("SaveAs"); 
+                    } else {
+                        return false;
+                    }
+                }
+                app.alert("File Saved",3);
+            } catch (e) {
+                app.alert("Save failed. Please try again.");
+            }
             
-            }
-        }  
-    }
-
-    if(autoSign=="true") {
-        if(saveBehavior=="1"){
-            app.execMenuItem("Save");
-        } else if(saveBehavior=="2"){
-            app.execMenuItem ("SaveAs"); 
-        } else {
-            return false;
-        }
+        }   
     }
 
     function getQuad(page,searchTerm,instance){
-        var found = "false";
-
+        var found = false;
         var n = 0;
         var p = page;
         var i = 1;
-        while (found == "false") {
+        while (!found) {
             if (this.getPageNthWord(p, n, false).trim() == searchTerm) {
                 if (i==instance) {
                     var quads = this.getPageNthWordQuads(p, n);
-                    var found = "true";
+                    var found = true;
                 }
                 i++;
             }
@@ -275,25 +288,35 @@ var sevisSign = app.trustedFunction( function (travelSig) {
         }
         var quadString = quads.toString();
         var quadArray = quadString.split(",");
-        return quadArray[1];
-        
+        return quadArray[1];    
     }
 
-    function searchWord(page,searchTerm){  
-        var found = "false";
-        var numWords = this.getPageNumWords(page);
+    function searchWord(page,searchTerm,numWords){  
+        var found = false;
+        console.println("searching for: " + searchTerm );
         for (n=0; n < numWords; n++) {
-            if (this.getPageNthWord(page, n, false).trim() == searchTerm) {
-                var found = "true";
+            try {
+                if (this.getPageNthWord(page, n, false).trim() == searchTerm) {
+                    var found = true;
+                }
+            } catch(e) {
+                return false;
             }
         }
-        if (found=="false") {
+        if (!found) {
             return false;
         } else {
             return true;
         }
     }
 
+    function padText(inputString,maxLen){  
+        var inputLen = inputString.length;
+        for (i=0; i<=maxLen-inputLen; i++) {
+            inputString = inputString+" ";
+        }
+        return inputString;
+    }
 
     app.endPriv();
 });
@@ -335,11 +358,23 @@ var sevSettings = app.trustedFunction( function () {
     var settingsFilefound = false;
 try{
     var settingsDoc = app.openDoc(app.getPath("user")+"/Security/sevSignSettings.pdf");
+    try{
+      settingsDoc.getField("fileOverride").value;
+    }
+    catch(e) {
+        console.println("attempting upgrade");
+        settingsDoc.addField("fileOverride", "text", 0, [0, 790-20*30, 100, 790-21*30]).value = "default.pfx";
+        settingsDoc.getField("fileOverride").value = "default.pfx";
+        settingsDoc.getField("fileOverride").textColor = color.white;
+        settingsDoc.saveAs(app.getPath("user")+"/Security/sevSignSettings.pdf");
+        settingsDoc.closeDoc(true);  
+        app.alert("Upgrade complete");
+        return;
+    }
     settingsFilefound = true;
     console.println("settingsFileFound:"+settingsFilefound);
 } catch(e) {
     settingsFilefound = false;
-    console.println("settingsFileFound2:"+settingsFilefound);
 }
 if(settingsFilefound==false){
     var settingsDoc = app.newDoc();
@@ -363,9 +398,9 @@ if(settingsFilefound==false){
     settingsDoc.addField("J1PrimarySignatureHeight", "text", 0, [0, 790-17*30, 100, 790-18*30]);
     settingsDoc.addField("J1TravelSignatureWidth", "text", 0, [0, 790-18*30, 100, 790-19*30]);
     settingsDoc.addField("J1TravelSignatureHeight", "text", 0, [0, 790-19*30, 100, 790-20*30]);
+    settingsDoc.addField("fileOverride", "text", 0, [0, 790-20*30, 100, 790-21*30]);
     settingsDoc.saveAs(app.getPath("user")+"/Security/sevSignSettings.pdf");
     }
-   // Dialog Definition 
 var oDlg = {
     dsoname : "",
     title : "",
@@ -377,7 +412,6 @@ var oDlg = {
     J1AppearanceSettings: "", 
     F1SignForTravel: "",
     J1SignForTravel: "",
-    //file: "",
     F1PrimarySignatureWidth: "",
     F1PrimarySignatureHeight: "",
     F1TravelSignatureWidth: "",
@@ -386,6 +420,8 @@ var oDlg = {
     J1PrimarySignatureHeight: "",
     J1TravelSignatureWidth: "",
     J1TravelSignatureHeight: "", 
+    J1TravelSignatureHeight: "",
+    fileOverride: "", 
     initialize: function(dialog) { 
         dialog.load({
             "fd01":this.dsoname,
@@ -399,7 +435,6 @@ var oDlg = {
             "fd09":this.F1SignForTravel,
             "fd10":this.J1SignForTravel, 
             "fd11":this.autoSign,
-           // "fd12":this.file,
             "fd13":this.F1PrimarySignatureWidth, 
             "fd14":this.F1PrimarySignatureHeight, 
             "fd15":this.F1TravelSignatureWidth,
@@ -407,7 +442,8 @@ var oDlg = {
             "fd17":this.J1PrimarySignatureWidth, 
             "fd18":this.J1PrimarySignatureHeight, 
             "fd19":this.J1TravelSignatureWidth, 
-            "fd20":this.J1TravelSignatureHeight 
+            "fd20":this.J1TravelSignatureHeight,
+            "fd21":this.fileOverride
         }); 
     },
     commit: function(dialog) { 
@@ -423,7 +459,6 @@ var oDlg = {
         settingsDoc.F1SignForTravel =  data[ "fd09"];
         settingsDoc.J1SignForTravel  =  data[ "fd10"];
         settingsDoc.autoSign =  data[ "fd11"];
-        //settingsDoc.file =  data[ "fd12"];
         settingsDoc.F1PrimarySignatureWidth  =  data[ "fd13"];
         settingsDoc.F1PrimarySignatureHeight  =  data[ "fd14"];
         settingsDoc.F1TravelSignatureWidth =  data[ "fd15"];
@@ -432,12 +467,13 @@ var oDlg = {
         settingsDoc.J1PrimarySignatureHeight  =  data[ "fd18"];
         settingsDoc.J1TravelSignatureWidth  =  data[ "fd19"];
         settingsDoc.J1TravelSignatureHeight =  data[ "fd20"];
+        settingsDoc.fileOverride =  data[ "fd21"];
     },
     description: { 
         name: "sevSign Settings", width: 600, elements: [
             { type: "cluster", name: "Disclaimer", align_children: "align_left", elements: [
                     {type: "view", align_children: "align_row", elements: [
-                        { name: "This is free for personal use only and cannot be copied, distributed, or integrated into other software. Use of this tool does not guarantee compliance with any regulatory requirements or restrictions.", alignment: "align_distribute", type: "static_text", }
+                        { name: "This cannot be distributed or integrated into other software. Use of this tool does not guarantee compliance with any regulatory requirements or restrictions.", alignment: "align_distribute", type: "static_text", }
                         ]
                     }
                  ]
@@ -459,7 +495,7 @@ var oDlg = {
                             { item_id: "fd04", type: "edit_text", char_width: 30, alignment: "align_left" },
 
                             { name: "password:", type: "static_text", alignment: "align_center"},
-                            { item_id: "fd05", type: "edit_text", char_width: 30, alignment: "align_center" },
+                            { item_id: "fd05", type: "edit_text", char_width: 30, alignment: "align_center" , password: true},
                         ]
                     }
                 ]
@@ -493,11 +529,11 @@ var oDlg = {
                             { item_id: "fd11", type: "check_box"}
                         ]
                     },
-                   // {type: "view", align_children: "align_row", elements: [
-                   //         { name: "file:", type: "static_text", },
-				   //         { item_id: "fd12", type: "edit_text", char_width: 30 }
-                   //     ]
-                   // },
+                    {type: "view", align_children: "align_row", elements: [
+                            { name: "Filename override:", type: "static_text", },
+				            { item_id: "fd21", type: "edit_text", char_width: 30 }
+                        ]
+                    },
                     { type: "cluster", name: "I-20 Signature settings", align_children: "align_left", elements: [
                             {type: "view", align_children: "align_row", elements: [
                                 { name: "Primary Width:", type: "static_text", },
@@ -540,23 +576,20 @@ var oDlg = {
 		
     }
 };
-
-
 if(settingsFilefound==false){
-// Dialog Activation 
-    oDlg.dsoname = "Full Name";
-    oDlg.title = "Title";
-    oDlg.location = "Athens, GA";
-    oDlg.email = "@uga.edu";
-    oDlg.password = "oie@uga";
-    oDlg.saveBehavior = "1";
+    oDlg.dsoname = "Michael Scott";
+    oDlg.title = "Regional Manager";
+    oDlg.location = "Scranton, PA";
+    oDlg.email = "mscott@dundermifflin.com";
+    oDlg.password = "12345";
+    oDlg.saveBehavior = "2";
     oDlg.F1AppearanceSettings = "Signature";
     oDlg.J1AppearanceSettings = "Signature";
     oDlg.F1SignForTravel = true;
     oDlg.J1SignForTravel = true;
     oDlg.autoSign = true;
-   // oDlg.file = "default";
-    oDlg.F1PrimarySignatureWidth = 270;
+    oDlg.fileOverride = "default.pfx";
+    oDlg.F1PrimarySignatureWidth = 170;
     oDlg.F1PrimarySignatureHeight = 20;
     oDlg.F1TravelSignatureWidth = 113;
     oDlg.F1TravelSignatureHeight = 35;
@@ -564,9 +597,9 @@ if(settingsFilefound==false){
     oDlg.J1PrimarySignatureHeight = 25;
     oDlg.J1TravelSignatureWidth = 145;
     oDlg.J1TravelSignatureHeight = 25;
+    
 }
 if(settingsFilefound==true){
-    console.println("settingsFileFound3:"+settingsFilefound);
     oDlg.dsoname = settingsDoc.getField("dsoname").value;
     oDlg.title = settingsDoc.getField("title").value;
     oDlg.location = settingsDoc.getField("location").value;
@@ -580,7 +613,7 @@ if(settingsFilefound==true){
     oDlg.F1SignForTravel = settingsDoc.getField("F1SignForTravel").value;
     oDlg.J1SignForTravel = settingsDoc.getField("J1SignForTravel").value;
     oDlg.autoSign = settingsDoc.getField("autoSign").value;
-   // oDlg.file = settingsDoc.getField("file").value;
+    oDlg.fileOverride = settingsDoc.getField("fileOverride").value;
     oDlg.F1PrimarySignatureWidth = settingsDoc.getField("F1PrimarySignatureWidth").value;
     oDlg.F1PrimarySignatureHeight = settingsDoc.getField("F1PrimarySignatureHeight").value;
     oDlg.F1TravelSignatureWidth = settingsDoc.getField("F1TravelSignatureWidth").value;
@@ -589,30 +622,56 @@ if(settingsFilefound==true){
     oDlg.J1PrimarySignatureHeight = settingsDoc.getField("J1PrimarySignatureHeight").value;
     oDlg.J1TravelSignatureWidth = settingsDoc.getField("J1TravelSignatureWidth").value;
     oDlg.J1TravelSignatureHeight = settingsDoc.getField("J1TravelSignatureHeight").value;
+    
 }
 
 if( "ok" == app.execDialog(oDlg)) {  
     settingsDoc.getField("dsoname").value = settingsDoc.dsoname;
+    settingsDoc.getField("dsoname").textColor = color.white;
     settingsDoc.getField("title").value = settingsDoc.title;
+    settingsDoc.getField("title").textColor = color.white;
     settingsDoc.getField("location").value = settingsDoc.location;
+    settingsDoc.getField("location").textColor = color.white;
     settingsDoc.getField("email").value = settingsDoc.email;
+    settingsDoc.getField("email").textColor = color.white;
     settingsDoc.getField("password").value = "$"+settingsDoc.password.toString();
+    settingsDoc.getField("password").textColor = color.white;
     settingsDoc.getField("saveBehavior").value = settingsDoc.saveBehavior;
+    settingsDoc.getField("saveBehavior").textColor = color.white;
     settingsDoc.getField("F1AppearanceSettings").value = settingsDoc.F1AppearanceSettings;
+    settingsDoc.getField("F1AppearanceSettings").textColor = color.white;
     settingsDoc.getField("J1AppearanceSettings").value = settingsDoc.J1AppearanceSettings;
+    settingsDoc.getField("J1AppearanceSettings").textColor = color.white;
     settingsDoc.getField("F1SignForTravel").value = settingsDoc.F1SignForTravel;
+    settingsDoc.getField("F1SignForTravel").textColor = color.white;
     settingsDoc.getField("J1SignForTravel").value = settingsDoc.J1SignForTravel;
+    settingsDoc.getField("J1SignForTravel").textColor = color.white;
     settingsDoc.getField("autoSign").value = settingsDoc.autoSign;
-    //settingsDoc.getField("file").value = settingsDoc.file;
+    settingsDoc.getField("autoSign").textColor = color.white;
     settingsDoc.getField("F1PrimarySignatureWidth").value = settingsDoc.F1PrimarySignatureWidth;
+    settingsDoc.getField("F1PrimarySignatureWidth").textColor = color.white;
     settingsDoc.getField("F1PrimarySignatureHeight").value = settingsDoc.F1PrimarySignatureHeight;
+    settingsDoc.getField("F1PrimarySignatureHeight").textColor = color.white;
     settingsDoc.getField("F1TravelSignatureWidth").value = settingsDoc.F1TravelSignatureWidth;
+    settingsDoc.getField("F1TravelSignatureWidth").textColor = color.white;
     settingsDoc.getField("F1TravelSignatureHeight").value = settingsDoc.F1TravelSignatureHeight;
+    settingsDoc.getField("F1TravelSignatureHeight").textColor = color.white;
     settingsDoc.getField("J1PrimarySignatureWidth").value = settingsDoc.J1PrimarySignatureWidth;
+    settingsDoc.getField("J1PrimarySignatureWidth").textColor = color.white;
     settingsDoc.getField("J1PrimarySignatureHeight").value = settingsDoc.J1PrimarySignatureHeight;
+    settingsDoc.getField("J1PrimarySignatureHeight").textColor = color.white;
     settingsDoc.getField("J1TravelSignatureWidth").value = settingsDoc.J1TravelSignatureWidth;
+    settingsDoc.getField("J1TravelSignatureWidth").textColor = color.white;
     settingsDoc.getField("J1TravelSignatureHeight").value = settingsDoc.J1TravelSignatureHeight;
-    settingsDoc.saveAs(app.getPath("user")+"/Security/sevSignSettings.pdf");
+    settingsDoc.getField("J1TravelSignatureHeight").textColor = color.white;
+    settingsDoc.getField("fileOverride").value = settingsDoc.fileOverride;
+    settingsDoc.getField("fileOverride").textColor = color.white;
+    try{
+        settingsDoc.saveAs(app.getPath("user")+"/Security/sevSignSettings.pdf");
+    } catch (e) {
+        app.alert("Unable to save settings. Please close out of Acrobat and reopen it to run the settings tool again.");
+        return;
+    }
     settingsDoc.closeDoc(true);  
 }
     app.endPriv();
