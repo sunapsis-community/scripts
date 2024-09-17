@@ -1,0 +1,225 @@
+# File Copy Locations
+net use x: \\---YOUR NETWORK PATH HERE--- /persistent:yes
+$source = "x:\---FOLDER WITHIN NETWORK PATH HERE---\*.*"
+$destination = "---SUNAPSIS ROOT PATH---\ioffice\batch\datafeed"
+$bckp = "x:\---FOLDER WITHIN NETWORK PATH HERE---\bckp"
+$log = "---LOCAL PATH TO PUT A LOG FILE---\log.txt"
+$logBody = "" # Initialize log content
+
+
+# Get FileNames
+$Items = Get-ChildItem "x:\---FOLDER WITHIN NETWORK PATH\" -Filter "*.xml" -Name
+
+# Log Items Found
+$logBody += "### Items Found in ---FOLDER NAME---: ###`r`n"
+foreach ($item in $Items) {
+  $logBody += $item + "`r`n"
+} 
+
+# Email Settings
+$smtpServer = "---SMTP SERVER---"
+$emailFrom = "---FROM NAME--- <---FROM EMAIL--->"
+$emailTo = "---COMMA SEPARATED LIST OF EMAILS TO SEND TO---"
+$subject = "---SUBJECT LINE---"
+$smtp = new-object Net.Mail.SmtpClient($smtpServer)
+$body = "---THIS WILL BE THE FIRST LINE OF YOUR EMAIL---`r`n`r`n"
+
+
+# Copy the files
+$startCopyTime = (Get-Date)
+Copy-Item $source $bckp -verbose -force
+
+# Log file copy details (time, file size)
+$logBody += "`r`n### File Copy Details ###`r`n"  
+Get-ChildItem -Path $bckp -Filter "*.xml" | ForEach-Object {
+    $endTime = Get-Date
+    $duration = $endTime - $startCopyTime
+
+    $logBody += "File Name: $($_.Name)`r`n"
+    $logBody += "  Modify Time: $($_.LastWriteTime)`r`n"
+    $logBody += "  Copy Start: $startCopyTime`r`n"
+    $logBody += "  Copy End: $endTime`r`n"
+    $logBody += "  Copy Duration: $duration`r`n`r`n"
+}
+
+# Move the files
+$startMoveTime = (Get-Date)
+move-item "x:\---FOLDER WITHIN NETWORK PATH HERE---\admission.xml" $destination -verbose -force
+move-item "x:\# File Copy Locations
+net use x: \\---YOUR NETWORK PATH HERE--- /persistent:yes
+$source = "x:\---FOLDER WITHIN NETWORK PATH HERE---\*.*"
+$destination = "---SUNAPSIS ROOT PATH---\ioffice\batch\datafeed"
+$bckp = "x:\---FOLDER WITHIN NETWORK PATH HERE---\bckp"
+$log = "---LOCAL PATH TO PUT A LOG FILE---\log.txt"
+$logBody = "" # Initialize log content
+
+
+# Get FileNames
+$Items = Get-ChildItem "x:\---FOLDER WITHIN NETWORK PATH\" -Filter "*.xml" -Name
+
+# Log Items Found
+$logBody += "### Items Found in ---FOLDER NAME---: ###`r`n"
+foreach ($item in $Items) {
+  $logBody += $item + "`r`n"
+} 
+
+# Email Settings
+$smtpServer = "---SMTP SERVER---"
+$emailFrom = "---FROM NAME--- <---FROM EMAIL--->"
+$emailTo = "---COMMA SEPARATED LIST OF EMAILS TO SEND TO---"
+$subject = "---SUBJECT LINE---"
+$smtp = new-object Net.Mail.SmtpClient($smtpServer)
+$body = "---THIS WILL BE THE FIRST LINE OF YOUR EMAIL---`r`n`r`n"
+
+
+# Copy the files
+$startCopyTime = (Get-Date)
+Copy-Item $source $bckp -verbose -force
+
+# Log file copy details (time, file size)
+$logBody += "`r`n### File Copy Details ###`r`n"  
+Get-ChildItem -Path $bckp -Filter "*.xml" | ForEach-Object {
+    $endTime = Get-Date
+    $duration = $endTime - $startCopyTime
+
+    $logBody += "File Name: $($_.Name)`r`n"
+    $logBody += "  Modify Time: $($_.LastWriteTime)`r`n"
+    $logBody += "  Copy Start: $startCopyTime`r`n"
+    $logBody += "  Copy End: $endTime`r`n"
+    $logBody += "  Copy Duration: $duration`r`n`r`n"
+}
+
+# Move the files
+$startMoveTime = (Get-Date)
+move-item "x:\---FOLDER WITHIN NETWORK PATH HERE---\admission.xml" $destination -verbose -force
+move-item "x:\# File Copy Locations
+net use x: \\---YOUR NETWORK PATH HERE--- /persistent:yes
+$source = "x:\---FOLDER WITHIN NETWORK PATH HERE---\*.*"
+$destination = "---SUNAPSIS ROOT PATH---\ioffice\batch\datafeed"
+$bckp = "x:\---FOLDER WITHIN NETWORK PATH HERE---\bckp"
+$log = "---LOCAL PATH TO PUT A LOG FILE---\log.txt"
+$logBody = "" # Initialize log content
+
+
+# Get FileNames
+$Items = Get-ChildItem "x:\---FOLDER WITHIN NETWORK PATH\" -Filter "*.xml" -Name
+
+# Log Items Found
+$logBody += "### Items Found in ---FOLDER NAME---: ###`r`n"
+foreach ($item in $Items) {
+  $logBody += $item + "`r`n"
+} 
+
+# Email Settings
+$smtpServer = "---SMTP SERVER---"
+$emailFrom = "---FROM NAME--- <---FROM EMAIL--->"
+$emailTo = "---COMMA SEPARATED LIST OF EMAILS TO SEND TO---"
+$subject = "---SUBJECT LINE---"
+$smtp = new-object Net.Mail.SmtpClient($smtpServer)
+$body = "---THIS WILL BE THE FIRST LINE OF YOUR EMAIL---`r`n`r`n"
+
+
+# Copy the files
+$startCopyTime = (Get-Date)
+Copy-Item $source $bckp -verbose -force
+
+# Log file copy details (time, file size)
+$logBody += "`r`n### File Copy Details ###`r`n"  
+Get-ChildItem -Path $bckp -Filter "*.xml" | ForEach-Object {
+    $endTime = Get-Date
+    $duration = $endTime - $startCopyTime
+
+    $logBody += "File Name: $($_.Name)`r`n"
+    $logBody += "  Modify Time: $($_.LastWriteTime)`r`n"
+    $logBody += "  Copy Start: $startCopyTime`r`n"
+    $logBody += "  Copy End: $endTime`r`n"
+    $logBody += "  Copy Duration: $duration`r`n`r`n"
+}
+
+# Move the files
+$startMoveTime = (Get-Date)
+move-item "x:\---FOLDER WITHIN NETWORK PATH HERE---\admission.xml" $destination -verbose -force
+move-item "x:\---FOLDER WITHIN NETWORK PATH HERE---\student.xml" $destination -verbose -force
+move-item "x:\---FOLDER WITHIN NETWORK PATH HERE---\opt.xml" $destination -verbose -force
+
+# Log file move details
+$logBody += "### File Move Details ###`r`n"
+Get-ChildItem -Path $destination -Filter "*.xml" | ForEach-Object {
+    $endTime = Get-Date
+    $duration = $endTime - $startMoveTime
+
+    $logBody += "File Name: $($_.Name)`r`n"
+    $logBody += "  Modify Time: $($_.LastWriteTime)`r`n"
+    $logBody += "  Move Start: $startMoveTime`r`n"
+    $logBody += "  Move End: $endTime`r`n"
+    $logBody += "  Move Duration: $duration`r`n`r`n"
+}
+
+net use x: /delete
+
+$endTime = (Get-Date)
+$totalRuntime = $endTime - $startCopyTime
+$logBody += "### Total Run Time ###`r`n"
+$logBody += "$totalRuntime`r`n"
+
+
+# Send an email
+$body += $logBody
+$smtp.Send($emailFrom, $emailTo, $subject, $body)
+Set-Content $log -Value $logBody
+\student.xml" $destination -verbose -force
+move-item "x:\UDCPROD8\opt.xml" $destination -verbose -force
+
+# Log file move details
+$logBody += "### File Move Details ###`r`n"
+Get-ChildItem -Path $destination -Filter "*.xml" | ForEach-Object {
+    $endTime = Get-Date
+    $duration = $endTime - $startMoveTime
+
+    $logBody += "File Name: $($_.Name)`r`n"
+    $logBody += "  Modify Time: $($_.LastWriteTime)`r`n"
+    $logBody += "  Move Start: $startMoveTime`r`n"
+    $logBody += "  Move End: $endTime`r`n"
+    $logBody += "  Move Duration: $duration`r`n`r`n"
+}
+
+net use x: /delete
+
+$endTime = (Get-Date)
+$totalRuntime = $endTime - $startCopyTime
+$logBody += "### Total Run Time ###`r`n"
+$logBody += "$totalRuntime`r`n"
+
+
+# Send an email
+$body += $logBody
+$smtp.Send($emailFrom, $emailTo, $subject, $body)
+Set-Content $log -Value $logBody
+\student.xml" $destination -verbose -force
+move-item "x:\UDCPROD8\opt.xml" $destination -verbose -force
+
+# Log file move details
+$logBody += "### File Move Details ###`r`n"
+Get-ChildItem -Path $destination -Filter "*.xml" | ForEach-Object {
+    $endTime = Get-Date
+    $duration = $endTime - $startMoveTime
+
+    $logBody += "File Name: $($_.Name)`r`n"
+    $logBody += "  Modify Time: $($_.LastWriteTime)`r`n"
+    $logBody += "  Move Start: $startMoveTime`r`n"
+    $logBody += "  Move End: $endTime`r`n"
+    $logBody += "  Move Duration: $duration`r`n`r`n"
+}
+
+net use x: /delete
+
+$endTime = (Get-Date)
+$totalRuntime = $endTime - $startCopyTime
+$logBody += "### Total Run Time ###`r`n"
+$logBody += "$totalRuntime`r`n"
+
+
+# Send an email
+$body += $logBody
+$smtp.Send($emailFrom, $emailTo, $subject, $body)
+Set-Content $log -Value $logBody
